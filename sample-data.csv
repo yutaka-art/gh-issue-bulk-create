@@ -1,0 +1,4 @@
+title,label1,label2,assignee,description,steps,expected,actual,os,browser,version
+Login page error occurs,bug,frontend,ntsk,Error appears when clicking button on the login page,Click the login button,Login process should execute,Error message is displayed,macOS,Chrome,115.0
+Search function not working,bug,backend,ntsk,Results don't appear when entering text in search box,"Enter ""test"" in search box and click search button",Search results should appear,Nothing is displayed,Windows,Firefox,120.0
+Responsive design issue,bug,ui,ntsk,Layout breaks on mobile screens,Open page on mobile device,Correct layout should be displayed,Elements overlap each other,iOS,Safari,16.0 
