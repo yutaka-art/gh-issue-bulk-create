@@ -4,8 +4,11 @@ package csv
 
 import (
 	"encoding/csv"
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // Parser provides CSV parsing functionality
@@ -29,7 +32,22 @@ func (p *Parser) Parse(filePath string) ([][]string, []string, error) {
 	// Read header row
 	headers, err := reader.Read()
 	if err != nil {
+		if err == io.EOF {
+			return nil, nil, errors.New("CSV file is empty")
+		}
 		return nil, nil, err
+	}
+
+	// Validate that headers are not empty
+	if len(headers) == 0 {
+		return nil, nil, errors.New("CSV file has no headers")
+	}
+
+	// Validate that headers do not contain empty strings
+	for i, header := range headers {
+		if header == "" {
+			return nil, nil, errors.New("empty header found at column " + string(rune('A'+i)))
+		}
 	}
 
 	// Read remaining records
@@ -46,6 +64,53 @@ func (p *Parser) Parse(filePath string) ([][]string, []string, error) {
 	}
 
 	return records, headers, nil
+}
+
+// ValidateHeadersAgainstTemplate validates that CSV headers match the variables in the template
+func (p *Parser) ValidateHeadersAgainstTemplate(headers []string, templateVars []string) ([]string, error) {
+	if len(headers) == 0 {
+		return nil, errors.New("CSV has no headers")
+	}
+
+	// Create a map of template variables for quick lookup
+	templateVarMap := make(map[string]bool)
+	for _, v := range templateVars {
+		templateVarMap[v] = true
+	}
+
+	// Check if each header exists in the template variables
+	var missingVars []string
+	var missingHeaders []string
+
+	// Check for CSV headers that don't exist in template
+	for _, header := range headers {
+		if !templateVarMap[header] {
+			missingVars = append(missingVars, header)
+		}
+	}
+
+	// Check for template variables that don't exist in CSV headers
+	headerMap := make(map[string]bool)
+	for _, h := range headers {
+		headerMap[h] = true
+	}
+	for _, v := range templateVars {
+		if !headerMap[v] {
+			missingHeaders = append(missingHeaders, v)
+		}
+	}
+
+	var warnings []string
+
+	if len(missingVars) > 0 {
+		warnings = append(warnings, fmt.Sprintf("Warning: The following CSV headers are not used in the template: %s", strings.Join(missingVars, ", ")))
+	}
+
+	if len(missingHeaders) > 0 {
+		warnings = append(warnings, fmt.Sprintf("Warning: The following template variables are missing from CSV headers: %s", strings.Join(missingHeaders, ", ")))
+	}
+
+	return warnings, nil
 }
 
 // MapRecords converts CSV records to maps using headers as keys

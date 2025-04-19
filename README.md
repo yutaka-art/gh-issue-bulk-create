@@ -53,7 +53,7 @@ You can use mustache syntax (`{{variable_name}}`) in the template to embed data 
 
 ### CSV File
 
-The CSV file should contain headers that match the variable names used in the template.
+The CSV file **must contain a header row** with column names that match the variable names used in the template.
 The first line is the header row, and each subsequent line will be used to create a separate issue.
 
 ```csv
@@ -61,6 +61,15 @@ title,label1,label2,assignee,description,steps
 Login page error,bug,frontend,username,Error appears when clicking login button,Click login button
 Search not working,bug,backend,username,"Results don't appear when searching,Enter ""test"" in search box and click search"
 ```
+
+#### CSV Header Requirements
+
+- Headers are required and must be in the first row of the CSV file
+- Each header (column name) must not be empty
+- The tool validates that CSV headers match the variables used in the template
+- Warning behaviors:
+  - If there are CSV headers that aren't used in the template: A warning is displayed but the process continues
+  - If there are template variables that don't have corresponding CSV headers: A warning is displayed and you'll be prompted to confirm whether to continue. If you continue, those missing variables will be left empty in the generated issues
 
 ## Example
 

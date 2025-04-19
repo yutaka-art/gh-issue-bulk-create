@@ -16,6 +16,27 @@ func NewRenderer() *Renderer {
 	return &Renderer{}
 }
 
+// ExtractVariables extracts all Mustache variable names from a template string
+func (r *Renderer) ExtractVariables(tmplContent string) []string {
+	re := regexp.MustCompile(`{{([^}]+)}}`)
+	matches := re.FindAllStringSubmatch(tmplContent, -1)
+
+	variableSet := make(map[string]struct{})
+	for _, match := range matches {
+		if len(match) > 1 {
+			varName := strings.TrimSpace(match[1])
+			variableSet[varName] = struct{}{}
+		}
+	}
+
+	variables := make([]string, 0, len(variableSet))
+	for varName := range variableSet {
+		variables = append(variables, varName)
+	}
+
+	return variables
+}
+
 // Render processes a template with the provided data
 func (r *Renderer) Render(tmplContent string, data map[string]string) (string, error) {
 	// Extract all variable names from the template using a regexp

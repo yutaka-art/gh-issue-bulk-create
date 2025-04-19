@@ -1,9 +1,67 @@
 package template
 
 import (
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
+
+func TestExtractVariables(t *testing.T) {
+	testCases := []struct {
+		name     string
+		template string
+		expected []string
+	}{
+		{
+			name:     "Simple template",
+			template: "Hello, {{name}}!",
+			expected: []string{"name"},
+		},
+		{
+			name:     "Multiple variables",
+			template: "{{greeting}}, {{name}}!",
+			expected: []string{"greeting", "name"},
+		},
+		{
+			name:     "Duplicate variables",
+			template: "{{name}}, {{name}}!",
+			expected: []string{"name"},
+		},
+		{
+			name:     "Variables with whitespace",
+			template: "{{ name }}, {{ greeting }}!",
+			expected: []string{"name", "greeting"},
+		},
+		{
+			name: "Markdown template with frontmatter",
+			template: `---
+title: "{{title}}"
+labels: {{label1}}, {{label2}}
+---
+## Description
+{{description}}
+## Steps
+{{steps}}`,
+			expected: []string{"title", "label1", "label2", "description", "steps"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			renderer := NewRenderer()
+			result := renderer.ExtractVariables(tc.template)
+
+			// Sort both slices for comparison
+			sort.Strings(result)
+			sort.Strings(tc.expected)
+
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("Expected variables %v, got %v", tc.expected, result)
+			}
+		})
+	}
+}
 
 func TestRender(t *testing.T) {
 	// Test cases

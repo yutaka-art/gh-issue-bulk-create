@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ntsk/gh-issue-bulk-create/internal/csv"
 	"github.com/ntsk/gh-issue-bulk-create/internal/github"
@@ -45,11 +46,48 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Extract variables from template
+	templateVars := templateRenderer.ExtractVariables(string(tmplContent))
+
 	// Read CSV file
 	records, headers, err := csvParser.Parse(*csvFile)
 	if err != nil {
-		fmt.Printf("Failed to read CSV file: %v\n", err)
+		// Provide more user-friendly error messages for CSV validation errors
+		if strings.Contains(err.Error(), "CSV file is empty") {
+			fmt.Printf("Error: The CSV file '%s' is empty. Please add headers and data.\n", *csvFile)
+		} else if strings.Contains(err.Error(), "empty header") {
+			fmt.Printf("Error: CSV validation failed: %v\n", err)
+			fmt.Println("All columns in the CSV file must have headers. Please check your CSV file.")
+		} else {
+			fmt.Printf("Failed to read CSV file: %v\n", err)
+		}
 		os.Exit(1)
+	}
+
+	// Validate headers against template variables
+	warnings, err := csvParser.ValidateHeadersAgainstTemplate(headers, templateVars)
+	if err != nil {
+		fmt.Printf("Error: Failed to validate CSV headers: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(warnings) > 0 {
+		fmt.Println("Validation warnings:")
+		for _, warning := range warnings {
+			fmt.Println(" -", warning)
+		}
+
+		if strings.Contains(warnings[0], "missing from CSV headers") {
+			fmt.Println("These missing variables will be left empty in the generated issues.")
+			fmt.Println("Do you want to continue? (y/N)")
+			var response string
+			fmt.Scanln(&response)
+			response = strings.ToLower(strings.TrimSpace(response))
+			if response != "y" && response != "yes" {
+				fmt.Println("Aborted.")
+				os.Exit(0)
+			}
+		}
 	}
 
 	// Map records to data maps
