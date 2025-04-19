@@ -4,9 +4,15 @@
 
 A GitHub CLI extension to create multiple GitHub issues in bulk.
 
+## Prerequisites
+
+The extension requires the gh CLI to be installed and in the `PATH`. The extension also requires the user to have authenticated via `gh auth`.
+
 ## Installation
 
-```
+This project is a GitHub CLI extension. After installing the `gh` CLI, from a command-line run:
+
+```bash
 gh extension install ntsk/gh-issue-bulk-create
 ```
 
@@ -14,7 +20,7 @@ gh extension install ntsk/gh-issue-bulk-create
 
 This extension uses a template markdown file and a CSV file containing data to create multiple GitHub issues in bulk.
 
-```
+```bash
 gh issue-bulk-create --template <template_file> --csv <csv_file> [--repo <owner/repo>] [--dry-run]
 ```
 
@@ -60,7 +66,7 @@ Search not working,bug,backend,username,"Results don't appear when searching,Ent
 
 You can try it with the sample files included in the repository:
 
-```
+```bash
 # From inside a git repository directory
 gh issue-bulk-create --template sample-template.md --csv sample-data.csv --dry-run
 
