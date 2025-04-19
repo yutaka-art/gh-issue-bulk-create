@@ -62,6 +62,20 @@ Login page error,bug,frontend,username,Error appears when clicking login button,
 Search not working,bug,backend,username,"Results don't appear when searching,Enter ""test"" in search box and click search"
 ```
 
+#### CSV Format Requirements
+
+- The file must be in a standard comma-separated values (CSV) format
+- Fields containing commas, newlines, or double quotes must be enclosed in double quotes
+- Double quotes within a quoted field must be escaped by doubling them (e.g., `"` becomes `""`)
+- Example of properly formatted CSV with special characters:
+  ```csv
+  title,description
+  "Title with, comma","Description with ""quotes"""
+  "Line breaks
+  in text","Another field"
+  ```
+- The tool uses Go's standard CSV parser, which follows RFC 4180 specifications
+
 #### CSV Header Requirements
 
 - Headers are required and must be in the first row of the CSV file
