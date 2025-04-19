@@ -1,3 +1,5 @@
+# Release workflow - triggered by v* tags
+# Note: Only users with admin privileges can create tags due to protection rules
 name: release
 on:
   push:
@@ -5,10 +7,15 @@ on:
       - "v*"
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: cli/gh-extension-precompile@v1
+      - uses: actions/checkout@v4
+      - uses: cli/gh-extension-precompile@v2
+        with:
+          go_version_file: go.mod
+          generate_attestations: true
