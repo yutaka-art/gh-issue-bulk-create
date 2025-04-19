@@ -67,7 +67,3 @@ gh issue-bulk-create --template sample-template.md --csv sample-data.csv --dry-r
 # Or specify a different repository
 gh issue-bulk-create --template sample-template.md --csv sample-data.csv --repo owner/repo-name
 ```
-
-## License
-
-MIT 
