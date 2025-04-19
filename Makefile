@@ -6,7 +6,7 @@ all: lint test build
 # Build target
 build:
 	@echo "Building gh-issue-bulk-create..."
-	@go build -o gh-issue-bulk-create
+	@go build -o gh-issue-bulk-create ./cmd/gh-issue-bulk-create
 
 # Run tests
 test:
@@ -34,12 +34,12 @@ clean:
 # Example run (dry-run mode)
 dry-run:
 	@echo "Running with dry-run mode..."
-	@go run main.go --template sample-template.md --csv sample-data.csv --dry-run
+	@go run ./cmd/gh-issue-bulk-create --template sample-template.md --csv sample-data.csv --dry-run
 
 # Install as GitHub CLI extension
 install:
 	@echo "Installing as GitHub CLI extension..."
-	@go build
+	@go build -o gh-issue-bulk-create ./cmd/gh-issue-bulk-create
 	@gh extension create --link .
 
 # Help
