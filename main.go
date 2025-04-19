@@ -311,7 +311,7 @@ func getCurrentRepository() (string, error) {
 
 	// Parse output as JSON
 	var info RepoInfo
-	if err := json.Unmarshal([]byte(output.String()), &info); err != nil {
+	if err := json.Unmarshal(output.Bytes(), &info); err != nil {
 		return "", err
 	}
 
