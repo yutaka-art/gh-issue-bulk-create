@@ -1,5 +1,7 @@
 # gh-issue-bulk-create
 
+![](https://github.com/ntsk/gh-issue-bulk-create/actions/workflows/ci.yml/badge.svg)
+
 A GitHub CLI extension to create multiple GitHub issues in bulk.
 
 ## Installation
