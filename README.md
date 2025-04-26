@@ -62,9 +62,11 @@ Login page error,bug,frontend,username,Error appears when clicking login button,
 Search not working,bug,backend,username,"Results don't appear when searching,Enter ""test"" in search box and click search"
 ```
 
-#### CSV Format Requirements
+#### CSV Requirements
 
-- The file must be in a standard comma-separated values (CSV) format
+- The file must be in a standard comma-separated values (CSV) format following RFC 4180 specifications
+- Headers are required and must be in the first row of the CSV file
+- Each header (column name) must not be empty and should match variables used in the template
 - Fields containing commas, newlines, or double quotes must be enclosed in double quotes
 - Double quotes within a quoted field must be escaped by doubling them (e.g., `"` becomes `""`)
 - Example of properly formatted CSV with special characters:
@@ -74,16 +76,10 @@ Search not working,bug,backend,username,"Results don't appear when searching,Ent
   "Line breaks
   in text","Another field"
   ```
-- The tool uses Go's standard CSV parser, which follows RFC 4180 specifications
 
-#### CSV Header Requirements
-
-- Headers are required and must be in the first row of the CSV file
-- Each header (column name) must not be empty
-- The tool validates that CSV headers match the variables used in the template
-- Warning behaviors:
-  - If there are CSV headers that aren't used in the template: A warning is displayed but the process continues
-  - If there are template variables that don't have corresponding CSV headers: A warning is displayed and you'll be prompted to confirm whether to continue. If you continue, those missing variables will be left empty in the generated issues
+#### Warning Behaviors
+- If there are CSV headers that aren't used in the template: A warning is displayed but the process continues
+- If there are template variables that don't have corresponding CSV headers: A warning is displayed and you'll be prompted to confirm whether to continue. If you continue, those missing variables will be left empty in the generated issues
 
 ## Example
 
