@@ -11,19 +11,77 @@ import (
 	"github.com/ntsk/gh-issue-bulk-create/internal/template"
 )
 
+// CommandLineOptions holds the command line options
+type CommandLineOptions struct {
+	templateFile string
+	csvFile      string
+	dryRun       bool
+	repo         string
+	showHelp     bool
+}
+
+func printHelp() {
+	helpText := `Usage: gh issue-bulk-create [options]
+
+Create multiple GitHub issues in bulk using a template file and CSV data.
+
+Options:
+  --template FILE       Path to the template markdown file (required)
+  --csv FILE            Path to the CSV file containing data (required)
+  --repo OWNER/REPO     Target repository (default: current repository)
+  --dry-run             Only show the content of issues without creating them
+  -h, --help            Show this help message
+
+Examples:
+  gh issue-bulk-create --template sample-template.md --csv sample-data.csv
+  gh issue-bulk-create --template sample-template.md --csv sample-data.csv --repo owner/repo
+  gh issue-bulk-create --template sample-template.md --csv sample-data.csv --dry-run
+`
+	fmt.Println(helpText)
+}
+
+func parseFlags() CommandLineOptions {
+	opts := CommandLineOptions{}
+
+	fs := flag.NewFlagSet("gh-issue-bulk-create", flag.ExitOnError)
+
+	fs.StringVar(&opts.templateFile, "template", "", "")
+	fs.StringVar(&opts.csvFile, "csv", "", "")
+	fs.BoolVar(&opts.dryRun, "dry-run", false, "")
+	fs.StringVar(&opts.repo, "repo", "", "")
+	fs.BoolVar(&opts.showHelp, "help", false, "")
+	fs.BoolVar(&opts.showHelp, "h", false, "")
+
+	fs.Usage = printHelp
+
+	// Check for -h or --help in arguments
+	for _, arg := range os.Args[1:] {
+		if arg == "-h" || arg == "--help" {
+			opts.showHelp = true
+			break
+		}
+	}
+
+	// Parse flags
+	fs.Parse(os.Args[1:])
+
+	return opts
+}
+
 func main() {
-	// Define command line arguments
-	templateFile := flag.String("template", "", "Path to the template markdown file")
-	csvFile := flag.String("csv", "", "Path to the CSV file containing data")
-	dryRun := flag.Bool("dry-run", false, "Only show the content of issues without creating them")
-	repo := flag.String("repo", "", "Target repository in the format of owner/repo (default: current repository)")
+	// Parse command line arguments
+	opts := parseFlags()
 
-	flag.Parse()
+	// Show help and exit
+	if opts.showHelp {
+		printHelp()
+		os.Exit(0)
+	}
 
-	// Check arguments
-	if *templateFile == "" || *csvFile == "" {
+	// Check required arguments
+	if opts.templateFile == "" || opts.csvFile == "" {
 		fmt.Println("Error: Both template file and CSV file must be specified")
-		flag.Usage()
+		printHelp()
 		os.Exit(1)
 	}
 
@@ -40,7 +98,7 @@ func main() {
 	}
 
 	// Read template file
-	tmplContent, err := os.ReadFile(*templateFile)
+	tmplContent, err := os.ReadFile(opts.templateFile)
 	if err != nil {
 		fmt.Printf("Failed to read template file: %v\n", err)
 		os.Exit(1)
@@ -50,11 +108,11 @@ func main() {
 	templateVars := templateRenderer.ExtractVariables(string(tmplContent))
 
 	// Read CSV file
-	records, headers, err := csvParser.Parse(*csvFile)
+	records, headers, err := csvParser.Parse(opts.csvFile)
 	if err != nil {
 		// Provide more user-friendly error messages for CSV validation errors
 		if strings.Contains(err.Error(), "CSV file is empty") {
-			fmt.Printf("Error: The CSV file '%s' is empty. Please add headers and data.\n", *csvFile)
+			fmt.Printf("Error: The CSV file '%s' is empty. Please add headers and data.\n", opts.csvFile)
 		} else if strings.Contains(err.Error(), "empty header") {
 			fmt.Printf("Error: CSV validation failed: %v\n", err)
 			fmt.Println("All columns in the CSV file must have headers. Please check your CSV file.")
@@ -94,7 +152,7 @@ func main() {
 	dataMaps := csvParser.MapRecords(records, headers)
 
 	// Determine repository
-	targetRepo := *repo
+	targetRepo := opts.repo
 	if targetRepo == "" {
 		// If not specified as a flag, try to get from current directory
 		targetRepo, err = githubClient.GetCurrentRepository()
@@ -123,7 +181,7 @@ func main() {
 			continue
 		}
 
-		if *dryRun {
+		if opts.dryRun {
 			// Dry run: Show issue content
 			fmt.Println("==== Issue Content ====")
 			fmt.Printf("Title: %s\n", issue.Title)

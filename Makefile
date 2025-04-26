@@ -40,7 +40,7 @@ dry-run:
 install:
 	@echo "Installing as GitHub CLI extension..."
 	@go build -o gh-issue-bulk-create
-	@gh extension create --link .
+	@gh extension install .
 
 # Help
 help:
