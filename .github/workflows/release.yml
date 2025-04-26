@@ -15,7 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - uses: cli/gh-extension-precompile@v2
         with:
           go_version_file: go.mod
           generate_attestations: true
+          gpg_fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}
