@@ -97,22 +97,32 @@ func TestMockClient(t *testing.T) {
 	}
 }
 
-// TestClientInterface demonstrates that both Client and MockClient implement ClientInterface
+// TestClientInterface demonstrates that MockClient implements ClientInterface
 func TestClientInterface(t *testing.T) {
-	// Verify that both types implement the interface
-	var client ClientInterface
+	// Verify that MockClient implements the interface by using it
+	var client ClientInterface = &MockClient{}
 
-	// Test with MockClient
-	mockClient := &MockClient{}
-	client = mockClient
-	if client == nil {
-		t.Error("MockClient should implement ClientInterface")
+	// Test that we can call interface methods
+	issue := &models.Issue{
+		Title: "Interface Test",
+		Body:  "Testing interface implementation",
 	}
 
-	// Test with real Client (this would fail without proper initialization in tests)
-	// realClient := &Client{}
-	// client = realClient
-	// if client == nil {
-	//     t.Error("Client should implement ClientInterface")
-	// }
+	response, err := client.CreateIssue(issue, "test/repo")
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if response.Number != 1 {
+		t.Errorf("Expected issue number 1, got %d", response.Number)
+	}
+
+	repo, err := client.GetCurrentRepository()
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if repo != "mock/repo" {
+		t.Errorf("Expected repo 'mock/repo', got '%s'", repo)
+	}
 }
