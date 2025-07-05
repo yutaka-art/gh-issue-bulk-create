@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ntsk/gh-issue-bulk-create/internal/csv"
 	"github.com/ntsk/gh-issue-bulk-create/internal/github"
@@ -164,6 +165,39 @@ func main() {
 	}
 
 	fmt.Printf("Target repository: %s\n", targetRepo)
+
+	// Check rate limit before creating issues
+	if !opts.dryRun {
+		rateLimit, err := githubClient.GetRateLimit()
+		if err != nil {
+			fmt.Printf("Warning: Failed to check rate limit: %v\n", err)
+		} else {
+			fmt.Printf("Current rate limit: %d remaining out of %d\n",
+				rateLimit.Rate.Remaining, rateLimit.Rate.Limit)
+
+			resetTime := time.Unix(int64(rateLimit.Rate.Reset), 0)
+			fmt.Printf("Reset time: %s (in %s)\n",
+				resetTime.Format(time.RFC3339),
+				time.Until(resetTime).Round(time.Minute))
+
+			issueCount := len(dataMaps)
+			if rateLimit.Rate.Remaining < issueCount {
+				fmt.Printf("Warning: Not enough rate limit remaining (%d) for %d issues\n",
+					rateLimit.Rate.Remaining, issueCount)
+				fmt.Printf("You may hit the rate limit during execution.\n")
+				fmt.Printf("Do you want to continue? (y/N): ")
+				var response string
+				fmt.Scanln(&response)
+				response = strings.ToLower(strings.TrimSpace(response))
+				if response != "y" && response != "yes" {
+					fmt.Println("Aborted.")
+					os.Exit(0)
+				}
+			} else {
+				fmt.Printf("Rate limit looks sufficient for %d issues\n", issueCount)
+			}
+		}
+	}
 
 	// Process template and create issues
 	for _, data := range dataMaps {
