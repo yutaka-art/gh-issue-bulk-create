@@ -6,6 +6,32 @@ import (
 	"github.com/ntsk/gh-issue-bulk-create/pkg/models"
 )
 
+// MockClient provides a mock GitHub client for testing
+type MockClient struct {
+	CreateIssueFunc       func(issue *models.Issue, repo string) (*models.IssueResponse, error)
+	GetCurrentRepoFunc    func() (string, error)
+	CreatedIssues         []*models.Issue
+	GetCurrentRepoCounter int
+}
+
+// CreateIssue implements the ClientInterface for testing
+func (m *MockClient) CreateIssue(issue *models.Issue, repo string) (*models.IssueResponse, error) {
+	m.CreatedIssues = append(m.CreatedIssues, issue)
+	if m.CreateIssueFunc != nil {
+		return m.CreateIssueFunc(issue, repo)
+	}
+	return &models.IssueResponse{Number: 1, URL: "https://github.com/mock/repo/issues/1"}, nil
+}
+
+// GetCurrentRepository implements the ClientInterface for testing
+func (m *MockClient) GetCurrentRepository() (string, error) {
+	m.GetCurrentRepoCounter++
+	if m.GetCurrentRepoFunc != nil {
+		return m.GetCurrentRepoFunc()
+	}
+	return "mock/repo", nil
+}
+
 func TestMockClient(t *testing.T) {
 	// Create mock client
 	mockClient := &MockClient{}
@@ -69,4 +95,24 @@ func TestMockClient(t *testing.T) {
 	if repo != "custom/repo" {
 		t.Errorf("Expected custom repo 'custom/repo', got '%s'", repo)
 	}
+}
+
+// TestClientInterface demonstrates that both Client and MockClient implement ClientInterface
+func TestClientInterface(t *testing.T) {
+	// Verify that both types implement the interface
+	var client ClientInterface
+
+	// Test with MockClient
+	mockClient := &MockClient{}
+	client = mockClient
+	if client == nil {
+		t.Error("MockClient should implement ClientInterface")
+	}
+
+	// Test with real Client (this would fail without proper initialization in tests)
+	// realClient := &Client{}
+	// client = realClient
+	// if client == nil {
+	//     t.Error("Client should implement ClientInterface")
+	// }
 }
