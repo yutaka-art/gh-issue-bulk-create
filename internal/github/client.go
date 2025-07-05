@@ -12,6 +12,12 @@ import (
 	"github.com/ntsk/gh-issue-bulk-create/pkg/models"
 )
 
+// ClientInterface defines the interface for GitHub API operations
+type ClientInterface interface {
+	CreateIssue(issue *models.Issue, repo string) (*models.IssueResponse, error)
+	GetCurrentRepository() (string, error)
+}
+
 // Client provides GitHub API functionality
 type Client struct {
 	client *api.RESTClient
@@ -87,30 +93,4 @@ func (c *Client) GetCurrentRepository() (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", info.Owner.Login, info.Name), nil
-}
-
-// MockClient provides a mock GitHub client for testing
-type MockClient struct {
-	CreateIssueFunc       func(issue *models.Issue, repo string) (*models.IssueResponse, error)
-	GetCurrentRepoFunc    func() (string, error)
-	CreatedIssues         []*models.Issue
-	GetCurrentRepoCounter int
-}
-
-// CreateIssue implements the Client interface for testing
-func (m *MockClient) CreateIssue(issue *models.Issue, repo string) (*models.IssueResponse, error) {
-	m.CreatedIssues = append(m.CreatedIssues, issue)
-	if m.CreateIssueFunc != nil {
-		return m.CreateIssueFunc(issue, repo)
-	}
-	return &models.IssueResponse{Number: 1, URL: "https://github.com/mock/repo/issues/1"}, nil
-}
-
-// GetCurrentRepository implements the Client interface for testing
-func (m *MockClient) GetCurrentRepository() (string, error) {
-	m.GetCurrentRepoCounter++
-	if m.GetCurrentRepoFunc != nil {
-		return m.GetCurrentRepoFunc()
-	}
-	return "mock/repo", nil
 }

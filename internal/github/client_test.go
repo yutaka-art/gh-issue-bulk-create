@@ -6,6 +6,32 @@ import (
 	"github.com/ntsk/gh-issue-bulk-create/pkg/models"
 )
 
+// MockClient provides a mock GitHub client for testing
+type MockClient struct {
+	CreateIssueFunc       func(issue *models.Issue, repo string) (*models.IssueResponse, error)
+	GetCurrentRepoFunc    func() (string, error)
+	CreatedIssues         []*models.Issue
+	GetCurrentRepoCounter int
+}
+
+// CreateIssue implements the ClientInterface for testing
+func (m *MockClient) CreateIssue(issue *models.Issue, repo string) (*models.IssueResponse, error) {
+	m.CreatedIssues = append(m.CreatedIssues, issue)
+	if m.CreateIssueFunc != nil {
+		return m.CreateIssueFunc(issue, repo)
+	}
+	return &models.IssueResponse{Number: 1, URL: "https://github.com/mock/repo/issues/1"}, nil
+}
+
+// GetCurrentRepository implements the ClientInterface for testing
+func (m *MockClient) GetCurrentRepository() (string, error) {
+	m.GetCurrentRepoCounter++
+	if m.GetCurrentRepoFunc != nil {
+		return m.GetCurrentRepoFunc()
+	}
+	return "mock/repo", nil
+}
+
 func TestMockClient(t *testing.T) {
 	// Create mock client
 	mockClient := &MockClient{}
@@ -68,5 +94,35 @@ func TestMockClient(t *testing.T) {
 	repo, _ = mockClient.GetCurrentRepository()
 	if repo != "custom/repo" {
 		t.Errorf("Expected custom repo 'custom/repo', got '%s'", repo)
+	}
+}
+
+// TestClientInterface demonstrates that MockClient implements ClientInterface
+func TestClientInterface(t *testing.T) {
+	// Verify that MockClient implements the interface by using it
+	var client ClientInterface = &MockClient{}
+
+	// Test that we can call interface methods
+	issue := &models.Issue{
+		Title: "Interface Test",
+		Body:  "Testing interface implementation",
+	}
+
+	response, err := client.CreateIssue(issue, "test/repo")
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if response.Number != 1 {
+		t.Errorf("Expected issue number 1, got %d", response.Number)
+	}
+
+	repo, err := client.GetCurrentRepository()
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if repo != "mock/repo" {
+		t.Errorf("Expected repo 'mock/repo', got '%s'", repo)
 	}
 }
