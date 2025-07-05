@@ -10,6 +10,7 @@ import (
 type MockClient struct {
 	CreateIssueFunc       func(issue *models.Issue, repo string) (*models.IssueResponse, error)
 	GetCurrentRepoFunc    func() (string, error)
+	GetRateLimitFunc      func() (*models.RateLimitResponse, error)
 	CreatedIssues         []*models.Issue
 	GetCurrentRepoCounter int
 }
@@ -30,6 +31,20 @@ func (m *MockClient) GetCurrentRepository() (string, error) {
 		return m.GetCurrentRepoFunc()
 	}
 	return "mock/repo", nil
+}
+
+// GetRateLimit implements the ClientInterface for testing
+func (m *MockClient) GetRateLimit() (*models.RateLimitResponse, error) {
+	if m.GetRateLimitFunc != nil {
+		return m.GetRateLimitFunc()
+	}
+	return &models.RateLimitResponse{
+		Rate: models.RateLimit{
+			Limit:     5000,
+			Remaining: 4999,
+			Reset:     1234567890,
+		},
+	}, nil
 }
 
 func TestMockClient(t *testing.T) {
@@ -124,5 +139,63 @@ func TestClientInterface(t *testing.T) {
 
 	if repo != "mock/repo" {
 		t.Errorf("Expected repo 'mock/repo', got '%s'", repo)
+	}
+
+	// Test GetRateLimit interface method
+	rateLimit, err := client.GetRateLimit()
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if rateLimit.Rate.Limit != 5000 {
+		t.Errorf("Expected rate limit 5000, got %d", rateLimit.Rate.Limit)
+	}
+}
+
+// TestRateLimit tests the GetRateLimit functionality
+func TestRateLimit(t *testing.T) {
+	// Create mock client
+	mockClient := &MockClient{}
+
+	// Test GetRateLimit with default values
+	rateLimit, err := mockClient.GetRateLimit()
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	// Check default values
+	if rateLimit.Rate.Limit != 5000 {
+		t.Errorf("Expected rate limit 5000, got %d", rateLimit.Rate.Limit)
+	}
+	if rateLimit.Rate.Remaining != 4999 {
+		t.Errorf("Expected remaining 4999, got %d", rateLimit.Rate.Remaining)
+	}
+	if rateLimit.Rate.Reset != 1234567890 {
+		t.Errorf("Expected reset 1234567890, got %d", rateLimit.Rate.Reset)
+	}
+
+	// Test with custom function
+	mockClient = &MockClient{
+		GetRateLimitFunc: func() (*models.RateLimitResponse, error) {
+			return &models.RateLimitResponse{
+				Rate: models.RateLimit{
+					Limit:     60,
+					Remaining: 30,
+					Reset:     1234567900,
+				},
+			}, nil
+		},
+	}
+
+	rateLimit, err = mockClient.GetRateLimit()
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if rateLimit.Rate.Limit != 60 {
+		t.Errorf("Expected custom limit 60, got %d", rateLimit.Rate.Limit)
+	}
+	if rateLimit.Rate.Remaining != 30 {
+		t.Errorf("Expected custom remaining 30, got %d", rateLimit.Rate.Remaining)
 	}
 }

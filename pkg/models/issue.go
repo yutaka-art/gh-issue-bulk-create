@@ -42,3 +42,15 @@ type IssueResponse struct {
 	Number int    `json:"number"`
 	URL    string `json:"html_url"`
 }
+
+// RateLimit represents GitHub API rate limit information
+type RateLimit struct {
+	Limit     int `json:"limit"`
+	Remaining int `json:"remaining"`
+	Reset     int `json:"reset"`
+}
+
+// RateLimitResponse represents GitHub API rate limit response
+type RateLimitResponse struct {
+	Rate RateLimit `json:"rate"`
+}

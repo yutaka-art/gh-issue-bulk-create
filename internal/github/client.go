@@ -16,6 +16,7 @@ import (
 type ClientInterface interface {
 	CreateIssue(issue *models.Issue, repo string) (*models.IssueResponse, error)
 	GetCurrentRepository() (string, error)
+	GetRateLimit() (*models.RateLimitResponse, error)
 }
 
 // Client provides GitHub API functionality
@@ -93,4 +94,17 @@ func (c *Client) GetCurrentRepository() (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", info.Owner.Login, info.Name), nil
+}
+
+// GetRateLimit gets the current GitHub API rate limit information
+func (c *Client) GetRateLimit() (*models.RateLimitResponse, error) {
+	response := &models.RateLimitResponse{}
+
+	// Send GET request to rate_limit endpoint
+	err := c.client.Get("rate_limit", response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rate limit: %v", err)
+	}
+
+	return response, nil
 }
