@@ -2,38 +2,38 @@
 
 ![](https://github.com/ntsk/gh-issue-bulk-create/actions/workflows/ci.yml/badge.svg)
 
-A GitHub CLI extension to create multiple GitHub issues in bulk.
+複数のGitHub Issueを一括作成するGitHub CLI拡張機能です。
 
-## Prerequisites
+## 前提条件
 
-The extension requires the gh CLI to be installed and in the `PATH`. The extension also requires the user to have authenticated via `gh auth`.
+この拡張機能を使用するには、gh CLIがインストールされ、`PATH`に設定されている必要があります。また、`gh auth`でユーザー認証が完了している必要があります。
 
-## Installation
+## インストール
 
-This project is a GitHub CLI extension. After installing the `gh` CLI, from a command-line run:
+このプロジェクトはGitHub CLI拡張機能です。`gh` CLIをインストール後、コマンドラインから以下を実行してください：
 
 ```bash
 gh extension install ntsk/gh-issue-bulk-create
 ```
 
-## Usage
+## 使用方法
 
-This extension uses a template markdown file and a CSV file containing data to create multiple GitHub issues in bulk.
+この拡張機能は、テンプレートマークダウンファイルとデータを含むCSVファイルを使用して、複数のGitHub Issueを一括作成します。
 
 ```bash
 gh issue-bulk-create --template <template_file> --csv <csv_file> [--repo <owner/repo>] [--dry-run]
 ```
 
-### Options
+### オプション
 
-- `--template`: Path to the template markdown file (required)
-- `--csv`: Path to the CSV file containing data (required)
-- `--repo`: Target repository in the format of owner/repo (default: current repository)
-- `--dry-run`: Only show the content of issues without creating them
+- `--template`: テンプレートマークダウンファイルのパス（必須）
+- `--csv`: データを含むCSVファイルのパス（必須）
+- `--repo`: 対象リポジトリ（owner/repo形式）（デフォルト: 現在のリポジトリ）
+- `--dry-run`: Issueを実際に作成せずに内容のみを表示
 
-### Template File
+### テンプレートファイル
 
-The template file follows the GitHub Issue template format with front matter metadata at the beginning of the file:
+テンプレートファイルは、ファイルの先頭にフロントマターメタデータを含むGitHub Issueテンプレート形式に従います：
 
 ```markdown
 ---
@@ -42,53 +42,53 @@ labels: "{{label1}}, {{label2}}"
 assignees: "{{assignee}}"
 ---
 
-## Description
+## 概要
 {{description}}
 
-## Steps to Reproduce
+## 再現手順
 {{steps}}
 ```
 
-You can use mustache syntax (`{{variable_name}}`) in the template to embed data from the CSV file.
+テンプレート内でCSVファイルのデータを埋め込むために、Mustache記法（`{{variable_name}}`）を使用できます。
 
-### CSV File
+### CSVファイル
 
-The CSV file **must contain a header row** with column names that match the variable names used in the template.
-The first line is the header row, and each subsequent line will be used to create a separate issue.
+CSVファイルには**ヘッダー行が必須**で、テンプレートで使用する変数名と一致する列名を含んでいる必要があります。
+最初の行がヘッダー行で、それ以降の各行が個別のIssue作成に使用されます。
 
 ```csv
 title,label1,label2,assignee,description,steps
-Login page error,bug,frontend,username,Error appears when clicking login button,Click login button
-Search not working,bug,backend,username,"Results don't appear when searching,Enter ""test"" in search box and click search"
+ログインページエラー,bug,frontend,username,ログインボタンクリック時にエラーが発生,ログインボタンをクリック
+検索が機能しない,bug,backend,username,"検索時に結果が表示されない","検索ボックスに""test""と入力して検索ボタンをクリック"
 ```
 
-#### CSV Requirements
+#### CSV要件
 
-- The file must be in a standard comma-separated values (CSV) format following RFC 4180 specifications
-- Headers are required and must be in the first row of the CSV file
-- Each header (column name) must not be empty and should match variables used in the template
-- Fields containing commas, newlines, or double quotes must be enclosed in double quotes
-- Double quotes within a quoted field must be escaped by doubling them (e.g., `"` becomes `""`)
-- Example of properly formatted CSV with special characters:
+- ファイルはRFC 4180仕様に従った標準的なカンマ区切り値（CSV）形式である必要があります
+- ヘッダーは必須で、CSVファイルの最初の行に配置する必要があります
+- 各ヘッダー（列名）は空であってはならず、テンプレートで使用される変数と一致している必要があります
+- カンマ、改行、ダブルクォートを含むフィールドは、ダブルクォートで囲む必要があります
+- クォートされたフィールド内のダブルクォートは、二重にしてエスケープする必要があります（例：`"`は`""`になります）
+- 特殊文字を含む適切にフォーマットされたCSVの例：
   ```csv
   title,description
-  "Title with, comma","Description with ""quotes"""
-  "Line breaks
-  in text","Another field"
+  "カンマ, を含むタイトル","ダブル""クォート""を含む説明"
+  "改行
+  を含むテキスト","別のフィールド"
   ```
 
-#### Warning Behaviors
-- If there are CSV headers that aren't used in the template: A warning is displayed but the process continues
-- If there are template variables that don't have corresponding CSV headers: A warning is displayed and you'll be prompted to confirm whether to continue. If you continue, those missing variables will be left empty in the generated issues
+#### 警告動作
+- テンプレートで使用されていないCSVヘッダーがある場合：警告が表示されますが、処理は続行されます
+- 対応するCSVヘッダーがないテンプレート変数がある場合：警告が表示され、続行するかどうかの確認が求められます。続行する場合、それらの不足している変数は生成されるIssueで空のままになります
 
-## Example
+## 例
 
-You can try it with the sample files included in the repository:
+リポジトリに含まれているサンプルファイルで試すことができます：
 
 ```bash
-# From inside a git repository directory
+# gitリポジトリディレクトリ内から
 gh issue-bulk-create --template sample-template.md --csv sample-data.csv --dry-run
 
-# Or specify a different repository
+# または異なるリポジトリを指定
 gh issue-bulk-create --template sample-template.md --csv sample-data.csv --repo owner/repo-name
 ```
